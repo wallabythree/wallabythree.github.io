@@ -26,15 +26,16 @@ can be exploited to steal the flag.
 
 ["Hack Me If You Can"](https://mch2022.badge.team/projects/hack_me_if_you_can)
 comes preinstalled on the badge. For the duration of the competition, a copy of
-`hack_me_if_you_can.elf` could also be downloaded from the [CTF website](https://ctf.mch2022.org). Although the CTF has ended, you can still exploit this
-vulnerability on your own badge.
+`hack_me_if_you_can.elf` could also be downloaded from the
+[CTF website](https://ctf.mch2022.org). Although the CTF has now ended, you can
+still exploit this vulnerability on your own badge.
 
 On badges: you technically don't need one to solve this challenge. However, it
-would be tough to develop an exploit without it. Further, a badge gives you
-access to the ESP32's debug log, which can be read via the USB serial interface:
+would be tough to develop an exploit without it. A badge also gives you access
+to the ESP32's debug log, which can be read via the USB serial interface:
 
 ```
-screen /dev/[usb_device_name] 115200
+screen /dev/[tty_usb_device_name] 115200
 ```
 
 **Note:** Only organisers' badges contained the real flag. At the camp,
@@ -121,13 +122,12 @@ of registers.
 
 What happens in these cases is that the ESP32
 [will loop back around](https://sachin0x18.github.io/posts/demystifying-xtensa-isa/)
-and overwrite registers that were allocated to function calls lower in the tree,
-but not before saving their contents onto the stack. Of course, as soon as this
-happens, we can use our stack overflow to manipulate these values. This appears
-to be exactly what happened when we managed to overwrite a return address with
-our long input buffer. Thanks to the recursion employed by
-`do_echo_recursive()`, we can hijack execution flow as if it were a regular x86
-or ARM processor.
+and overwrite registers that were allocated to earlier function calls, but not
+before saving their contents onto the stack. Of course, as soon as this happens,
+we can use our stack overflow to manipulate these values. This appears to be
+exactly what happened when we managed to overwrite a return address with our
+long input buffer. Thanks to the recursion employed by `do_echo_recursive()`,
+we can hijack execution flow as if it were a regular x86 or ARM processor.
 
 ### 1.4 Finding offsets and fixing registers
 
@@ -176,8 +176,8 @@ that **the Xtensa stack is not executable** . Hopefully this will save you from
 trying to write shellcode for an architecture that essentially only supports
 relative addressing, which, I learned, is not fun.
 
-Just because we cannot run our own shellcode does not mean we can't
-tell the programme what to do, however. We can use
+Just because we cannot run our own shellcode does not mean we can't tell the
+programme what to do, however. We can use
 [return-oriented programming](https://en.wikipedia.org/wiki/Return-oriented_programming)
 to make use of any instructions already present, including those related to
 sending data over TCP.
