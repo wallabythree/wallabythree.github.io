@@ -6,8 +6,8 @@ description: "The badge for the [MCH2022](https://www.mch2022.org) hacker camp
 comes with a CTF challenge, which, thanks to the ESP32's Xtensa architecture,
 appears to be somewhat protected against classic stack overflow attacks.
 However, thanks to recursion in the main loop, a buffer overflow is all that is
-needed to solve this challenge. This post will walk through the vulnerability
-and explain how it can be exploited to steal the flag."
+needed to solve it. This post will walk through the vulnerability and explain
+how it can be exploited to steal the flag."
 draft: false
 ---
 
@@ -18,8 +18,8 @@ The badge for the [MCH2022](https://www.mch2022.org) hacker camp comes with a
 CTF challenge, which, thanks to the ESP32's Xtensa architecture, appears to be
 somewhat protected against classic stack overflow attacks. However, thanks to 
 recursion in the main loop, a buffer overflow is all that is needed to solve
-this challenge. This post will walk through the vulnerability and explain how it
-can be exploited to steal the flag.
+it. This post will walk through the vulnerability and explain how it can be
+exploited to steal the flag.
 
 
 ## 0. Setup
