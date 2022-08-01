@@ -151,7 +151,7 @@ and **a11**.
 
 This is extremely helpful because the Xtensa calling convention reserves
 registers **a10**-**a13** as the first four arguments to any function call that
-is called with a `call8` instruction. Controlling some of these registers will
+is made with a `call8` instruction. Controlling some of these registers will
 help us make our own function calls.
 
 Finally, we have a slightly annoying problem to solve. In the examples above,
