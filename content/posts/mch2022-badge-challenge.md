@@ -156,7 +156,7 @@ help us make our own function calls.
 
 Finally, we have a slightly annoying problem to solve. In the examples above,
 we had to terminate our TCP connection in order to trigger the crash and obtain
-the register dump. This is because `echo_server()` only returns under one of two
+the register dump. This is because `do_echo()` only returns under one of two
 conditions: the connection gets closed, or a newline character (`0x0a`) is
 received. Closing the connection is bad for us, because we won't  be able to
 send data back to our machine. However, sending an extra `0x0a` character ends
