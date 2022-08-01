@@ -253,7 +253,7 @@ if __name__ == "__main__":
     main()
 ```
 
-When we run the exploit, we can see that we did it! We can can successfully
+When we run the exploit, we can see that we did it! We can successfully
 retrieves the placeholder flag from our badge. A CTF organiser has also kindly
 confirmed the exploit works against badges that contain the real flag.
 
