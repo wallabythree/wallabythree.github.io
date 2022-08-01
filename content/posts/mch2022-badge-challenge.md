@@ -141,7 +141,7 @@ At first glance, it appears we can only control the return address (see the
 program counter `PC`). However, we can also try overwriting more registers,
 particularly to see if we can play with the stack pointer in register **a1**.
 Because the return address and the stack pointer are stored next to each other
-in memory, we simply need to write the four bytes beyond the return address to
+in memory, we simply need to write four bytes beyond the return address to
 control the stack pointer. We start at the original value for our frame
 (`0x3ffbf1d0`) and play around with it until we find that address `0x3ffbb1b0`
 will result in values from our input buffer being stored in registers **a10**
