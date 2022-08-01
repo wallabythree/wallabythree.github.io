@@ -174,7 +174,7 @@ to send data back to our machine.
 ### 2.1 Finding a ROP gadget
 
 First some advice: *do your homework*. If I had done mine, I would have known
-that **the Xtensa stack is not executable** . Hopefully this will save you from
+that **the Xtensa stack is not executable**. Hopefully this will save you from
 trying to write shellcode for an architecture that essentially only supports
 relative addressing, which, I learned, is not fun.
 
