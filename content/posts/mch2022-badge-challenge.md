@@ -253,9 +253,9 @@ if __name__ == "__main__":
     main()
 ```
 
-As we can see below, the exploit successfully retrieves the placeholder flag
-from our own badge. A CTF organiser has also kindly confirmed the exploit works
-against badges that contain the real flag.
+When we run the exploit, we can see that did it! We can can successfully
+retrieves the placeholder flag from our badge. A CTF organiser has also kindly
+confirmed the exploit works against badges that contain the real flag.
 
 [![proof](/img/proof.png)](/img/proof.png)
 
