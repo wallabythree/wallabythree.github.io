@@ -123,11 +123,12 @@ of registers.
 What happens in these cases is that the ESP32
 [will loop back around](https://sachin0x18.github.io/posts/demystifying-xtensa-isa/)
 and overwrite registers that were allocated to earlier function calls, but not
-before saving their contents onto the stack. Of course, as soon as this happens,
-we can use our stack overflow to manipulate these values. This appears to be
-exactly what happened when we managed to overwrite a return address with our
-long input buffer. Thanks to the recursion employed by `do_echo_recursive()`,
-we can hijack execution flow as if it were a regular x86 or ARM processor.
+before saving their contents onto the stack. Of course, as soon as values get
+pushed to the stack, we can use our stack overflow to manipulate them. This
+appears to be what happened when we managed to overwrite a return address with
+our long input buffer. Thanks to the recursion employed by 
+`do_echo_recursive()`, we can hijack execution flow as if it were a regular x86
+or ARM processor.
 
 ### 1.4 Finding offsets and fixing registers
 
