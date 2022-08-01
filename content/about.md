@@ -11,6 +11,6 @@ struct wallaby {
     void* point;
 };
 
-struct wallaby three { NULL };
+struct wallaby three = { NULL };
 ```
 
