@@ -111,7 +111,7 @@ address when we send buffers larger than 48 bytes. How can this be?
 
 Let's take another look at Ghidra. At the time our corrupted return address gets
 loaded into the program counter we are returning from the recursive function
-`do_echo_recursive()`. This function calls itself 9 times before calling into
+`do_echo_recursive()`. This function calls itself nine times before calling into
 the actual echo function, `do_echo()`. We said earlier that the register window
 shifts every time a function is called to provide clean registers to the callee.
 But the ESP32 only contains 64 registers, and each call to `do_echo_recursive()`
