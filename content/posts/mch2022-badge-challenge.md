@@ -113,8 +113,9 @@ loaded into the program counter we are returning from the recursive function
 `do_echo_recursive()`. This function calls itself 45 times before calling into
 the actual echo function, `do_echo()`. We said earlier that the register window
 shifts every time a function is called to provide clean registers to the callee.
-But the ESP32 only contains 64 registers, and each call to `do_echo_recursive()` moves the window to the right by eight. We quickly run out of registers to
-accommodate these calls.
+But the ESP32 only contains 64 registers, and each call to `do_echo_recursive()`
+moves the window to the right by eight. Here we see a problem: we will run out
+of registers.
 
 ![](/img/ghidra-3.png)
 
