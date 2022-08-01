@@ -189,7 +189,7 @@ and takes three arguments, of which we can set the first two via **a10** and
 already contains a large value at the time our return address gets loaded. If we
 set our return address to `lwip_write()`, **a10** to our socket descriptor
 (`0x37`), and **a11** to the flag address we found earlier, we should be able to
-send the flag back to our client. Helpfully, `lwip_write` also sets **a13**
+send the flag back to our client. Helpfully, `lwip_write()` also sets **a13**
 (the TCP `flags` argument to `lwip_send()`) to `0x0`, so we don't have to figure
 out how to do it ourselves.
 
