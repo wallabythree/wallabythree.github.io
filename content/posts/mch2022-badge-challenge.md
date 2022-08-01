@@ -64,8 +64,6 @@ buffer into the prompt. When we do, we find that the service crashes as soon as
 inputs exceed 48 bytes. Let's circle back to why this is strange behaviour for
 an ESP32-style chip later.
 
-![](/img/gdbstub-1.png)
-
 At this point we can crash the app, but we can't do much else. We need to
 analyse the programme further to find out where to go next. Fortunately, there
 is an open source [Xtensa module](https://github.com/yath/ghidra-xtensa) for
@@ -108,6 +106,8 @@ a stack overflow.
 
 However, the debug log reveals that we definitely are overwriting a return
 address when we send buffers larger than 48 bytes. How can this be?
+
+![](/img/gdbstub-1.png)
 
 Let's take another look at Ghidra. At the time our corrupted return address gets
 loaded into the program counter we are returning from the recursive function
