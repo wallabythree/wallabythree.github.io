@@ -24,11 +24,11 @@ can be exploited to steal the flag.
 
 ## 0. Setup
 
-"Hack Me If You Can" comes preinstalled on the badge. A copy of 
-`hack_me_if_you_can.elf` could also be downloaded from the 
-[CTF website](https://ctf.mch2022.org) for the duration of the competition.
-Although the CTF has ended, you can still exploit this vulnerability on your
-own badge.
+["Hack Me If You Can"](https://mch2022.badge.team/projects/hack_me_if_you_can)
+comes preinstalled on the badge. A copy of `hack_me_if_you_can.elf` could also
+be downloaded from the [CTF website](https://ctf.mch2022.org) for the duration
+of the competition. Although the CTF has ended, you can still exploit this
+vulnerability on your own badge.
 
 On badges: you technically don't need one to solve this challenge. However, it
 would be tough to develop an exploit without it. Further, a badge gives you
