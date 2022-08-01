@@ -271,7 +271,7 @@ deceiving, and that it pays dig deeper when things don't add up.
 
 Sadly I didn't win any points for this challenge -- I solved it two days after
 getting home. The two teams who did manage to solve it while at MCH2022 were
-[Brantzenamt](https://dojoe.github.io/hackmeifyoucan/) and
+[Bratzenamt](https://dojoe.github.io/hackmeifyoucan/) and
 [ChaosWest](https://twitter.com/__spq__/status/1552386564759687175). Well done
 and hats off to both of them.
 
