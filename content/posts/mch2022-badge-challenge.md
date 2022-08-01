@@ -132,8 +132,8 @@ we can hijack execution flow as if it were a regular x86 or ARM processor.
 ### 1.4 Finding offsets and fixing registers
 
 Before we can exploit this vulnerability, we need to find out what else we
-control and we can use this to our advantage. The easiest way to do this is to
-send an input pattern in which every byte is unique.
+control and how we can use this to our advantage. The easiest way to do this is
+to send an input pattern in which every byte is unique.
 
 ![](/img/gdbstub-2.png)
 
