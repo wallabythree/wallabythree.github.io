@@ -149,11 +149,30 @@ SECTIONS
 }
 ```
 
-With this linker script, we can assemble and relink the ROM and RAM into a single ELF file. (I like to use `clang`  as it produces a closer mapping to the original assembly.)
+With linker script, we can assemble and relink the ROM and RAM into a single ELF file. We'll start by adding a few assembler directives to `rom.S` so the linker knows it belongs in the `.text` section and contains the entry point:
 
-```sh
-clang --target=riscv32 -march=rv32i rom.S -c -o rom.o && \
-riscv64-unknown-elf-objcopy -I binary -O elf32-littleriscv -B riscv ram.bin ram.o && \
+```asm
+.section .text
+.global _start
+
+_start:
+# [...]
+```
+
+Then we can assemble the ROM (I prefer `clang` as it maps more closely to the original assembly):
+```
+clang --target=riscv32 -march=rv32i rom.S -c -o rom.o
+```
+
+We also need to use `objcopy` to place the RAM in its own object file:
+
+```
+riscv64-unknown-elf-objcopy -I binary -O elf32-littleriscv -B riscv ram.bin ram.o
+```
+
+Finally, we use the linker script to combine the object files into a single ELF file:
+
+```
 riscv64-unknown-elf-ld rom.o ram.o -T linker.ld -o fruit.elf
 ```
 
