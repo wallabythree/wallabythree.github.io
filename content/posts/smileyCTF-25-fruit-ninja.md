@@ -121,7 +121,7 @@ Success! So, we're dealing with a RISC-V 32 CPU. Whew, that simplifies things: w
 
 There is something odd about `ram_file.mem` and `rom_file.mem`. They both start with `@00000000`, telling the CPU to load both RAM and ROM at the same address.
 
-![Harvard architecture](https://upload.wikimedia.org/wikipedia/commons/3/3f/Harvard_architecture.svg)
+[![Harvard architecture - diagram by Nessa Ios](https://upload.wikimedia.org/wikipedia/commons/3/3f/Harvard_architecture.svg)](https://commons.wikimedia.org/wiki/File:Harvard_architecture.svg)
 
 On a Von Neumann architecture (which most personal computers use), loading both the RAM and ROM to address `00000000` would cause them to overwrite each other. But on a Harvard architecture, the ROM will end up in instruction memory and the RAM in data memory, so both can be stored at `00000000`. This program seems like it was developed for a Harvard machine. Binary Ninja, our decompiler, expects a Von Neumann architecture, so we'll have to fix this.
 
