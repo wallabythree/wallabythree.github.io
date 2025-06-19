@@ -39,7 +39,7 @@ Clearly, these look like memory dumps with an address at the top and the actual 
 
 ## 2. Discovering the instruction set
 
-Every CPU has an decoder that breaks down the zeroes and ones of a program into instructions it understands. If we can find the logic for the decoder, we know what operations our processor supports and how they are encoded.
+Every CPU has a decoder that breaks down the zeroes and ones of a program into instructions it understands. If we can find the logic for the decoder, we know what operations our processor supports and how they are encoded.
 
 Exploring `src/`, we find this intriguing enum in `CPU.h.sv`:
 
