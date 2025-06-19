@@ -149,7 +149,7 @@ SECTIONS
 }
 ```
 
-With linker script, we can assemble and relink the ROM and RAM into a single ELF file. We'll start by adding a few assembler directives to `rom.S` so the linker knows it belongs in the `.text` section and contains the entry point:
+With the linker script, we can assemble and relink the ROM and RAM into a single ELF file. We'll start by adding a few assembler directives to `rom.S` so the linker knows it belongs in the `.text` section and contains the entry point:
 
 ```asm
 .section .text
