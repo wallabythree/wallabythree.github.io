@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Reverse on zphyr.net</title><link>http://localhost:1313/tags/reverse/</link><description>Recent content in Reverse on zphyr.net</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Wed, 18 Jun 2025 13:39:15 +0200</lastBuildDate><atom:link href="http://localhost:1313/tags/reverse/index.xml" rel="self" type="application/rss+xml"/><item><title>smileyCTF 2025: Fruit Ninja</title><link>http://localhost:1313/posts/smileyctf-25-fruit-ninja/</link><pubDate>Wed, 18 Jun 2025 13:39:15 +0200</pubDate><guid>http://localhost:1313/posts/smileyctf-25-fruit-ninja/</guid><description>&lt;p>One of my favourite challenges from last week&amp;rsquo;s smileyCTF was Fruit Ninja, a RISC-V reversing challenge for a custom CPU. is a RISC-V reversing challenge that involves a custom CPU and&lt;/p>
+&lt;h2 id="challenge-description">Challenge description&lt;/h2>
+&lt;blockquote>
+&lt;p>my friend made a custom cpu, so of course i had to make a game for it. can you win? @unvariant REMEMBER TO GIVE THEM CPU&lt;/p>&lt;/blockquote>
+&lt;ul>
+&lt;li>&lt;a href="https://storage.googleapis.com/sctf-attachments/rev-fruitninja/fruitninja.tar.gz?X-Goog-Algorithm=GOOG4-RSA-SHA256&amp;amp;X-Goog-Credential=registry-deployer%40eternal-respect-454600-c7.iam.gserviceaccount.com%2F20250616%2Fauto%2Fstorage%2Fgoog4_request&amp;amp;X-Goog-Date=20250616T124037Z&amp;amp;X-Goog-Expires=604800&amp;amp;X-Goog-SignedHeaders=host&amp;amp;X-Goog-Signature=9352f957a77d9ad42d042808afcd6b8c23c7f6a43f5de7c0c23304aaa51dc85c7875cb5b89cba81d37ca721738edefce207e297f84e3551d30ded8dc5ff772d3ea0e13deb29b609c911216b2aeae40802e47bd6f931dab02183c21b11bafdfabca97770f94fd77094f0de0926451715f818b0576d751e209655c99409d63bac7d6cc92689ecc81096976d83074fdc70f6d8973eb715d58b097e4e523a412f487a2cc6ecaec2b8bf9bb12a1103db2b3051900c91ed99f257576e8ec52e93ce1f85b3ab15601f30d765c9c13cad905a60715b84fbaf2dd2f64c384e3b68426642e7e34fac75affa37ac2a04ac95a9f6d0c82899525f7db2aa27c710ddd15a815e2">fruitninja.tar.gz&lt;/a>&lt;/li>
+&lt;li>Creator: flocto&lt;/li>
+&lt;li>rev&lt;/li>
+&lt;/ul>
+&lt;h2 id="summary">Summary&lt;/h2>
+&lt;ol>
+&lt;li>Discover that CPU is a Harvard architecture RISC-V 32 machine.&lt;/li>
+&lt;li>Recompile ROM and RAM into ELF using custom linker script.&lt;/li>
+&lt;li>Decompile ELF and find Base64-style flag checker.&lt;/li>
+&lt;li>Brute force individual flag chars ().&lt;/li>
+&lt;/ol></description></item></channel></rss>

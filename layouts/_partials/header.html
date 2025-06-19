@@ -1,0 +1,8 @@
+<h1><a href="/">{{ .Site.Title }}</a></h1>
+<nav>
+    {{ range .Site.Pages }}
+      {{ if and (eq .Section "") (not .IsHome) }}
+      <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+      {{ end }}
+    {{ end}}
+</nav>

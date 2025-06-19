@@ -14,6 +14,8 @@ draft: false
 > The full exploit is available on
 > [Github](https://github.com/wallabythree/mch2022-hack-me-if-you-can).
 
+![](badge-challenge-cover.png)
+
 The badge for the [MCH2022](https://www.mch2022.org) hacker camp comes with a
 CTF challenge, which, thanks to the ESP32's Xtensa architecture, appears to be
 somewhat protected against classic stack overflow attacks. However, thanks to 
@@ -78,14 +80,14 @@ lifting for our echo service. Aside from setting up the WiFi and calling into
 storage (a key-value store) with the key `hackmeifyoucan`. This value, if found,
 gets copied to an uninitialised array named `flag`.
 
-![](/img/ghidra-1.png)
+![](ghidra-1.png)
 
 Further down, we observe that the string `flag{not_a_real_flag}` gets copied to
 the same location if the key-value store query is unsuccesful. Putting two and
 two together, we can safely assume the flag will be at address `0x3ffb5358`
 during runtime.
 
-![](/img/ghidra-2.png)
+![](ghidra-2.png)
 
 
 ### 1.3 A not-so-mysterious crash?
@@ -107,7 +109,7 @@ a stack overflow.
 However, the debug log reveals that we definitely are overwriting a return
 address when we send buffers larger than 48 bytes. How can this be?
 
-![](/img/gdbstub-1.png)
+![](gdbstub-1.png)
 
 Let's take another look at Ghidra. At the time our corrupted return address gets
 loaded into the program counter we are returning from the recursive function
@@ -118,7 +120,7 @@ But the ESP32 only contains 64 registers, and each call to `do_echo_recursive()`
 moves the window to the right by eight. Here we see a problem: we will run out
 of registers.
 
-![](/img/ghidra-3.png)
+![](ghidra-3.png)
 
 What happens in these cases is that the ESP32
 [will loop back around](https://sachin0x18.github.io/posts/demystifying-xtensa-isa/)
@@ -136,7 +138,7 @@ Before we can exploit this vulnerability, we need to find out what else we
 control and how we can use this to our advantage. The easiest way to do this is
 to send an input pattern in which every byte is unique.
 
-![](/img/gdbstub-2.png)
+![](gdbstub-2.png)
 
 At first glance, it appears we can only control the return address (see the
 program counter `PC`). However, we can also try overwriting more registers,
@@ -148,7 +150,7 @@ control the stack pointer. We start at the original value for our frame
 will result in values from our input buffer being stored in registers **a10**
 and **a11**.
 
-![](/img/gdbstub-3.png)
+![](gdbstub-3.png)
 
 This is extremely helpful because the Xtensa calling convention reserves
 registers **a10**-**a13** as the first four arguments to any function call that
@@ -195,7 +197,7 @@ send the flag back to our client. Helpfully, `lwip_write()` also sets **a13**
 (the TCP `flags` argument to `lwip_send()`) to `0x0`, so we don't have to figure
 out how to do it ourselves.
 
-![](/img/ghidra-4.png)
+![](ghidra-4.png)
 
 ### 2.2 Writing the exploit
 
@@ -259,7 +261,7 @@ When we run the exploit, we can see that we did it! We can successfully
 retrieve the placeholder flag from our badge. A CTF organiser has kindly
 confirmed the exploit also works against badges containing the real flag.
 
-[![proof](/img/proof.png)](/img/proof.png)
+[![proof](proof.png)](/img/proof.png)
 
 ## 3. Conclusion
 

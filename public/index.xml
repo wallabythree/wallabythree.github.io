@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>wallaby</title><link>http://localhost:1313/</link><description>Recent content on wallaby</description><generator>Hugo</generator><language>en-gb</language><lastBuildDate>Thu, 19 Jun 2025 13:39:15 +0200</lastBuildDate><atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml"/><item><title>smileyCTF 2025: Fruit Ninja</title><link>http://localhost:1313/posts/smileyctf-25-fruit-ninja/</link><pubDate>Thu, 19 Jun 2025 13:39:15 +0200</pubDate><guid>http://localhost:1313/posts/smileyctf-25-fruit-ninja/</guid><description>&lt;blockquote>
+&lt;p>my friend made a custom cpu, so of course i had to make a game for it. can you win? @unvariant REMEMBER TO GIVE THEM CPU&lt;/p>
+&lt;p>&lt;code>rev&lt;/code>, 8 solves, created by flocto&lt;/p>&lt;/blockquote>
+&lt;p>&lt;em>Fruit Ninja&lt;/em> was a fun challenge from last week&amp;rsquo;s smileyCTF. It involved reverse engineering code written for a custom RISC-V 32 processor with a Harvard architecture, which could be relinked using a custom linker script to allow for easy static analysis. This revealed a straightforward flag checking scheme that could trivially be brute forced.&lt;/p></description></item><item><title>MCH2022 badge challenge: "Hack Me If You Can"</title><link>http://localhost:1313/posts/mch2022-badge-challenge/</link><pubDate>Mon, 01 Aug 2022 11:03:21 +0200</pubDate><guid>http://localhost:1313/posts/mch2022-badge-challenge/</guid><description>&lt;blockquote>
+&lt;p>The full exploit is available on
+&lt;a href="https://github.com/wallabythree/mch2022-hack-me-if-you-can">Github&lt;/a>.&lt;/p>&lt;/blockquote>
+&lt;p>&lt;img src="badge-challenge-cover.png" alt="">&lt;/p>
+&lt;p>The badge for the &lt;a href="https://www.mch2022.org">MCH2022&lt;/a> hacker camp comes with a
+CTF challenge, which, thanks to the ESP32&amp;rsquo;s Xtensa architecture, appears to be
+somewhat protected against classic stack overflow attacks. However, thanks to
+recursion in the main loop, a buffer overflow is all that is needed to solve
+it. This post will walk through the vulnerability and explain how it can be
+exploited to steal the flag.&lt;/p></description></item></channel></rss>

@@ -1,0 +1,166 @@
+<!doctype html><html lang=en-gb dir=ltr><head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><title>MCH2022 badge challenge: "Hack Me If You Can"</title><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css></head><body><header><h1><a href=/>wallaby</a></h1><nav></nav></header><main><article><h1>MCH2022 badge challenge: "Hack Me If You Can"</h1><i><time>2022-08-01</time></i><blockquote><p>The full exploit is available on
+<a href=https://github.com/wallabythree/mch2022-hack-me-if-you-can>Github</a>.</p></blockquote><p><img src=badge-challenge-cover.png alt></p><p>The badge for the <a href=https://www.mch2022.org>MCH2022</a> hacker camp comes with a
+CTF challenge, which, thanks to the ESP32&rsquo;s Xtensa architecture, appears to be
+somewhat protected against classic stack overflow attacks. However, thanks to
+recursion in the main loop, a buffer overflow is all that is needed to solve
+it. This post will walk through the vulnerability and explain how it can be
+exploited to steal the flag.</p><h2 id=0-setup>0. Setup</h2><p><a href=https://mch2022.badge.team/projects/hack_me_if_you_can>&ldquo;Hack Me If You Can&rdquo;</a>
+comes preinstalled on the badge. For the duration of the competition, a copy of
+<code>hack_me_if_you_can.elf</code> could also be downloaded from the
+<a href=https://ctf.mch2022.org>CTF website</a>. Although the CTF has now ended, you can
+still exploit this vulnerability on your own badge.</p><p>On badges: you technically don&rsquo;t need one to solve this challenge. However, it
+would be tough to develop an exploit without it. A badge also gives you access
+to the ESP32&rsquo;s debug log, which can be read via the USB serial interface:</p><pre tabindex=0><code>screen /dev/[tty_usb_device_name] 115200
+</code></pre><p><strong>Note:</strong> Only organisers&rsquo; badges contained the real flag. At the camp,
+participants were instructed to develop a proof of concept against their own
+badge and find an organiser once they had a working exploit.</p><h2 id=1-finding-the-vulnerability>1. Finding the vulnerability</h2><h3 id=11-a-mysterious-crash>1.1 A mysterious crash</h3><p>The badge&rsquo;s challenge app consists of a simple echo server hosted on port
+<code>1337</code>. When a client attempts to connect, the badge will prompt its owner for
+approval, after which the service will repeat anything sent by the client:</p><pre tabindex=0><code>$ nc badge.ip 1337
+Connection accepted!
+&gt; hello
+&lt; hello
+&gt; echo
+&lt; echo
+</code></pre><p>Being CTF players, our first instinct should be to stuff a very long input
+buffer into the prompt. When we do, we find that the service crashes as soon as
+inputs exceed 48 bytes. Let&rsquo;s circle back to why this is strange behaviour for
+an ESP32-style chip later.</p><p>At this point we can crash the app, but we can&rsquo;t do much else. We need to
+analyse the programme further to find out where to go next. Fortunately, there
+is an open source <a href=https://github.com/yath/ghidra-xtensa>Xtensa module</a> for
+Ghidra that will let us disassemble the compiled binary.</p><h3 id=12-digging-for-the-flag>1.2 Digging for the flag</h3><p>First things first: let&rsquo;s find our flag. The app&rsquo;s main function is called
+<code>app_main()</code>. This function calls into <code>start_service()</code>, which does the heavy
+lifting for our echo service. Aside from setting up the WiFi and calling into
+<code>echo_server()</code>, it also attempts to read a value from the ESP32&rsquo;s non-volatile
+storage (a key-value store) with the key <code>hackmeifyoucan</code>. This value, if found,
+gets copied to an uninitialised array named <code>flag</code>.</p><p><img src=ghidra-1.png alt></p><p>Further down, we observe that the string <code>flag{not_a_real_flag}</code> gets copied to
+the same location if the key-value store query is unsuccesful. Putting two and
+two together, we can safely assume the flag will be at address <code>0x3ffb5358</code>
+during runtime.</p><p><img src=ghidra-2.png alt></p><h3 id=13-a-not-so-mysterious-crash>1.3 A not-so-mysterious crash?</h3><p>We need to understand why the programme crashes when the input buffer
+exceeds 48 bytes. This is unusual because Xtensa processors like the ESP32 do
+not, as a rule, store return addresses on the stack. Rather, they are stored in
+a dedicated register, <strong>a0</strong>. On chips like the ESP32, there are 64 registers,
+of which 16 are visible to the CPU at any given time. When a function is called, the
+<a href=https://projects.cerias.purdue.edu/stackghost/stackghost/node5.html>&lsquo;window&rsquo;</a>
+of visible registers shifts forward, giving the callee a fresh set of registers
+to work with. (Note here that the callee&rsquo;s register <strong>a0</strong> is not the same as
+the caller&rsquo;s register <strong>a0</strong>.) When the callee returns, the window shifts back
+so that the caller can pick up where it left off. The benefit of this
+arrangement is not having to offload memory to the stack, which results in
+increased performance. It also means we cannot overwrite the return address with
+a stack overflow.</p><p>However, the debug log reveals that we definitely are overwriting a return
+address when we send buffers larger than 48 bytes. How can this be?</p><p><img src=gdbstub-1.png alt></p><p>Let&rsquo;s take another look at Ghidra. At the time our corrupted return address gets
+loaded into the program counter we are returning from the recursive function
+<code>do_echo_recursive()</code>. This function calls itself nine times before calling into
+the actual echo function, <code>do_echo()</code>. We said earlier that the register window
+shifts every time a function is called to provide clean registers to the callee.
+But the ESP32 only contains 64 registers, and each call to <code>do_echo_recursive()</code>
+moves the window to the right by eight. Here we see a problem: we will run out
+of registers.</p><p><img src=ghidra-3.png alt></p><p>What happens in these cases is that the ESP32
+<a href=https://sachin0x18.github.io/posts/demystifying-xtensa-isa/>will loop back around</a>
+and overwrite registers that were allocated to earlier function calls, but not
+before saving their contents onto the stack. Of course, as soon as values get
+pushed to the stack, we can use our stack overflow to manipulate them. This
+appears to be what happened when we managed to overwrite a return address with
+our long input buffer. Thanks to the recursion employed by
+<code>do_echo_recursive()</code>, we can hijack execution flow as if it were a regular x86
+or ARM processor.</p><h3 id=14-finding-offsets-and-fixing-registers>1.4 Finding offsets and fixing registers</h3><p>Before we can exploit this vulnerability, we need to find out what else we
+control and how we can use this to our advantage. The easiest way to do this is
+to send an input pattern in which every byte is unique.</p><p><img src=gdbstub-2.png alt></p><p>At first glance, it appears we can only control the return address (see the
+program counter <code>PC</code>). However, we can also try overwriting more registers,
+particularly to see if we can play with the stack pointer in register <strong>a1</strong>.
+Because the return address and the stack pointer are stored next to each other
+in memory, we simply need to write four bytes beyond the return address to
+control the stack pointer. We start at the original value for our frame
+(<code>0x3ffbf1d0</code>) and play around with it until we find that address <code>0x3ffbb1b0</code>
+will result in values from our input buffer being stored in registers <strong>a10</strong>
+and <strong>a11</strong>.</p><p><img src=gdbstub-3.png alt></p><p>This is extremely helpful because the Xtensa calling convention reserves
+registers <strong>a10</strong>-<strong>a13</strong> as the first four arguments to any function call that
+is made with a <code>call8</code> instruction. Controlling some of these registers will
+help us make our own function calls.</p><p>Finally, we have a slightly annoying problem to solve. In the examples above,
+we had to terminate our TCP connection in order to trigger the crash and obtain
+the register dump. This is because <code>do_echo()</code> only returns under one of two
+conditions: the connection gets closed, or a newline character (<code>0x0a</code>) is
+received. Closing the connection is bad for us, because we won&rsquo;t be able to
+send data back to our machine. However, sending an extra <code>0x0a</code> character ends
+up overwriting the first argument to <code>do_echo_recursive()</code>, which happens to be
+the socket descriptor for our TCP connection. Let&rsquo;s make a mental note here that
+this appears to always be set to <code>0x37</code>.</p><h2 id=2-developing-the-exploit>2. Developing the exploit</h2><p>At this point we have all we need to start developing an exploit. We can control
+execution flow, pass arguments to function calls, and keep the connection alive
+to send data back to our machine.</p><h3 id=21-finding-a-rop-gadget>2.1 Finding a ROP gadget</h3><p>First some advice: <em>do your homework</em>. If I had done mine, I would have known
+that <strong>the Xtensa stack is not executable</strong>. Hopefully this will save you from
+trying to write shellcode for an architecture that essentially only supports
+relative addressing, which, I learned, is not fun.</p><p>Just because we cannot run our own shellcode does not mean we can&rsquo;t tell the
+programme what to do, however. We can use
+<a href=https://en.wikipedia.org/wiki/Return-oriented_programming>return-oriented programming</a>
+to make use of any instructions already present, including those related to
+sending data over TCP.</p><p>One function stands out in particular: <code>ssize_t lwip_write(int socket, void* data, size_t size)</code>. This function invokes <code>lwip_send()</code> to send data over TCP
+and takes three arguments, of which we can set the first two via <strong>a10</strong> and
+<strong>a11</strong>. Further, the register dumps show that <strong>a12</strong> &ndash; the third argument &ndash;
+already contains a large value at the time our return address gets loaded. If we
+set our return address to <code>lwip_write()</code>, <strong>a10</strong> to our socket descriptor
+(<code>0x37</code>), and <strong>a11</strong> to the flag address we found earlier, we should be able to
+send the flag back to our client. Helpfully, <code>lwip_write()</code> also sets <strong>a13</strong>
+(the TCP <code>flags</code> argument to <code>lwip_send()</code>) to <code>0x0</code>, so we don&rsquo;t have to figure
+out how to do it ourselves.</p><p><img src=ghidra-4.png alt></p><h3 id=22-writing-the-exploit>2.2 Writing the exploit</h3><p>If we bring all this together, we get a fairly straightforward Python exploit:</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=display:flex><span><span style=color:#f92672>import</span> socket
+</span></span><span style=display:flex><span><span style=color:#f92672>import</span> argparse
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>main</span>():
+</span></span><span style=display:flex><span>    parser <span style=color:#f92672>=</span> argparse<span style=color:#f92672>.</span>ArgumentParser(
+</span></span><span style=display:flex><span>            description<span style=color:#f92672>=</span><span style=color:#e6db74>&#34;Exploit for the &#39;Hack Me If You &#34;</span>
+</span></span><span style=display:flex><span>                        <span style=color:#e6db74>&#34;Can&#39; challenge for the MCH2022 CTF.&#34;</span>
+</span></span><span style=display:flex><span>    )
+</span></span><span style=display:flex><span>    parser<span style=color:#f92672>.</span>add_argument(<span style=color:#e6db74>&#39;target&#39;</span>, type<span style=color:#f92672>=</span>str, help<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;target IP / hostname&#39;</span>)
+</span></span><span style=display:flex><span>    parser<span style=color:#f92672>.</span>add_argument(<span style=color:#e6db74>&#39;port&#39;</span>, type<span style=color:#f92672>=</span>int, help<span style=color:#f92672>=</span><span style=color:#e6db74>&#39;target port&#39;</span>)
+</span></span><span style=display:flex><span>    args <span style=color:#f92672>=</span> parser<span style=color:#f92672>.</span>parse_args()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Exploit constants</span>
+</span></span><span style=display:flex><span>    A10 <span style=color:#f92672>=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\x37\x00\x00\x00</span><span style=color:#e6db74>&#34;</span> <span style=color:#75715e># socket descriptor (first argument)</span>
+</span></span><span style=display:flex><span>    A11 <span style=color:#f92672>=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\x58\x53\xfb\x3f</span><span style=color:#e6db74>&#34;</span> <span style=color:#75715e># flag address (second argument)</span>
+</span></span><span style=display:flex><span>    PC  <span style=color:#f92672>=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\xb8\x76\x0d\x40</span><span style=color:#e6db74>&#34;</span> <span style=color:#75715e># call8 lwip_write(a10, a11, a12)</span>
+</span></span><span style=display:flex><span>    A1  <span style=color:#f92672>=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\xb0\xf1\xfb\x3f</span><span style=color:#e6db74>&#34;</span> <span style=color:#75715e># stack pointer (req&#39;d to return from do_echo())</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    exploit(args<span style=color:#f92672>.</span>target, args<span style=color:#f92672>.</span>port, A10, A11, PC, A1)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>def</span> <span style=color:#a6e22e>exploit</span>(target, port, a10, a11, pc, a1):
+</span></span><span style=display:flex><span>    buffer <span style=color:#f92672>=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\x65</span><span style=color:#e6db74>&#34;</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>40</span> <span style=color:#f92672>+</span> a10 <span style=color:#f92672>+</span> a11 <span style=color:#f92672>+</span> pc <span style=color:#f92672>+</span> a1 <span style=color:#f92672>+</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#34;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    print(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;Connecting to </span><span style=color:#e6db74>{</span>target<span style=color:#e6db74>}</span><span style=color:#e6db74>:</span><span style=color:#e6db74>{</span>port<span style=color:#e6db74>}</span><span style=color:#e6db74>...&#34;</span>)
+</span></span><span style=display:flex><span>    s <span style=color:#f92672>=</span> socket<span style=color:#f92672>.</span>socket(socket<span style=color:#f92672>.</span>AF_INET, socket<span style=color:#f92672>.</span>SOCK_STREAM)
+</span></span><span style=display:flex><span>    s<span style=color:#f92672>.</span>connect((target, port))
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    print(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;Waiting for user to accept connection...&#34;</span>)
+</span></span><span style=display:flex><span>    r <span style=color:#f92672>=</span> s<span style=color:#f92672>.</span>recv(<span style=color:#ae81ff>128</span>)
+</span></span><span style=display:flex><span>    status <span style=color:#f92672>=</span> r<span style=color:#f92672>.</span>decode()
+</span></span><span style=display:flex><span>    print(status)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> <span style=color:#e6db74>&#34;denied&#34;</span> <span style=color:#f92672>in</span> status:
+</span></span><span style=display:flex><span>        s<span style=color:#f92672>.</span>close()
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    print(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;Sending malicious buffer...&#34;</span>)
+</span></span><span style=display:flex><span>    s<span style=color:#f92672>.</span>sendall(buffer)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    print(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;Buffer sent, awaiting reply...&#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># Discard output of do_echo() </span>
+</span></span><span style=display:flex><span>    s<span style=color:#f92672>.</span>recv(len(buffer))
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    r <span style=color:#f92672>=</span> s<span style=color:#f92672>.</span>recv(<span style=color:#ae81ff>39</span>)
+</span></span><span style=display:flex><span>    s<span style=color:#f92672>.</span>close()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    print(<span style=color:#e6db74>f</span><span style=color:#e6db74>&#34;Flag: </span><span style=color:#e6db74>{</span>r<span style=color:#f92672>.</span>decode()<span style=color:#e6db74>}</span><span style=color:#e6db74>&#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>if</span> __name__ <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;__main__&#34;</span>:
+</span></span><span style=display:flex><span>    main()
+</span></span></code></pre></div><p>When we run the exploit, we can see that we did it! We can successfully
+retrieve the placeholder flag from our badge. A CTF organiser has kindly
+confirmed the exploit also works against badges containing the real flag.</p><p><a href=/img/proof.png><img src=proof.png alt=proof></a></p><h2 id=3-conclusion>3. Conclusion</h2><p>This was an extremely fun and rewarding badge challenge. What&rsquo;s interesting is
+that none of techniques involved are particularly esoteric. Rather, the
+challenge lies in getting to grips with a new processor architecture and
+working without a debugger. Above all, it teaches you that appearances can be
+deceiving, and that it pays dig deeper when things don&rsquo;t add up.</p><p>Sadly I didn&rsquo;t win any points for this challenge &ndash; I solved it two days after
+getting home. The two teams who did manage to solve it while at MCH2022 were
+<a href=https://dojoe.github.io/hackmeifyoucan/>Bratzenamt</a> and
+<a href=https://twitter.com/__spq__/status/1552386564759687175>ChaosWest</a>. Well done
+and hats off to both of them.</p><p>Thanks to the organisers of the <a href=https://ctf.mch2022.org>MCH2022 CTF</a> for a
+excellent challenge and a great CTF!</p></article></main><footer><p>CC-BY 4.0</p></footer></body></html>
