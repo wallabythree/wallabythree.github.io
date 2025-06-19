@@ -1,4 +1,4 @@
 *.lock
 .obsidian
-/public
+public/
 
