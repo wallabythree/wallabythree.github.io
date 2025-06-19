@@ -19,7 +19,7 @@ The challenge gives us the following files:
 - `fruitninja/vcpu*`: a simulator for the custom CPU
 - `fruitninja/src`: a directory containing files like `CPU.sv` and `RAM.sv`
 
-A quick Google search reveals that `sv` stands for [SystemVerilog](), a hardware description language useful for describing CPUs. So `src` contains the custom CPU's "source code".
+A quick Google search reveals that `sv` stands for [SystemVerilog](https://en.wikipedia.org/wiki/SystemVerilog), a hardware description language useful for describing CPUs. So `src` contains the custom CPU's "source code".
 
 We'll probably need to reverse the ROM to solve this challenge, so let's take a look inside `rom_file.mem` and `ram_file.mem`:
 
