@@ -80,7 +80,7 @@ def disasm():
         print(f"{i.mnemonic} {i.op_str}")
 ```
 
-Yet, the initial disassembly seems to be nonsensical:
+However, the initial disassembly makes no sense:
 
 ```asm
 c.addi4spn s0, sp, 0x100
